@@ -1,0 +1,80 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+*.sqlite3
+*.db
+.env
+.venv/
+venv/
+env/
+*.env
+*.env.*
+
+# FastAPI (Python web)
+instance/
+*.db
+*.sqlite3
+
+# Elasticsearch
+elasticsearch-data/
+elasticsearch-logs/
+
+# Node/React/TypeScript
+frontend/node_modules/
+frontend/build/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+frontend/.next/
+frontend/.cache/
+frontend/yarn-error.log
+frontend/npm-debug.log
+frontend/.eslintcache
+
+# Docker
+*.pid
+*.pid.lock
+docker-compose.override.yml
+**/.dockerignore
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+*.orig
+.idea/
+.vscode/
+*.iml
+
+# Logs
+*.log
+logs/
+log/
+debug.log
+error.log
+
+# Misc
+*.coverage
+coverage/
+htmlcov/
+.tox/
+.mypy_cache/
+.pytest_cache/
+.cache/
+*.test.js.snap
+*.test.ts.snap
+*.test.tsx.snap
