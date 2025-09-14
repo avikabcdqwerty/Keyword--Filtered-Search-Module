@@ -19,9 +19,7 @@ jobs:
       - name: Detect package manager
         id: detect-pkg
         run: |
-          if [ -f "frontend/package-lock.json" ]; then
-            echo "manager=npm" >> $GITHUB_OUTPUT
-          elif [ -f "frontend/yarn.lock" ]; then
+          if [ -f "frontend/yarn.lock" ]; then
             echo "manager=yarn" >> $GITHUB_OUTPUT
           elif [ -f "frontend/pnpm-lock.yaml" ]; then
             echo "manager=pnpm" >> $GITHUB_OUTPUT
@@ -29,24 +27,30 @@ jobs:
             echo "manager=npm" >> $GITHUB_OUTPUT
           fi
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Install dependencies
         run: |
-          if [ "${{ steps.detect-pkg.outputs.manager }}" = "npm" ]; then
-            npm ci
-          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "yarn" ]; then
+          if [ "${{ steps.detect-pkg.outputs.manager }}" = "yarn" ]; then
             yarn install --frozen-lockfile
           elif [ "${{ steps.detect-pkg.outputs.manager }}" = "pnpm" ]; then
+            npm install -g pnpm
             pnpm install --frozen-lockfile
+          else
+            npm ci
           fi
 
       - name: Build project
         run: |
-          if [ "${{ steps.detect-pkg.outputs.manager }}" = "npm" ]; then
-            npm run build
-          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "yarn" ]; then
+          if [ "${{ steps.detect-pkg.outputs.manager }}" = "yarn" ]; then
             yarn build
           elif [ "${{ steps.detect-pkg.outputs.manager }}" = "pnpm" ]; then
             pnpm build
+          else
+            npm run build
           fi
 
       - name: Deploy to GitHub Pages
@@ -54,3 +58,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: frontend/build
+          publish_branch: gh-pages
+          force_orphan: true
