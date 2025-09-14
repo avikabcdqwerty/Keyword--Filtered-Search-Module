@@ -1,4 +1,4 @@
-name: Deploy static content to GitHub Pages
+name: Deploy Static Content to GitHub Pages
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -17,37 +17,37 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Detect package manager
-        id: detect-pm
+        id: detect-pkg
         run: |
-          if [ -f "yarn.lock" ]; then
-            echo "pm=yarn" >> $GITHUB_OUTPUT
-            echo "install_cmd=yarn install --frozen-lockfile" >> $GITHUB_OUTPUT
-            echo "build_cmd=yarn build" >> $GITHUB_OUTPUT
-          elif [ -f "pnpm-lock.yaml" ]; then
-            echo "pm=pnpm" >> $GITHUB_OUTPUT
-            echo "install_cmd=pnpm install --frozen-lockfile" >> $GITHUB_OUTPUT
-            echo "build_cmd=pnpm build" >> $GITHUB_OUTPUT
+          if [ -f "frontend/package-lock.json" ]; then
+            echo "manager=npm" >> $GITHUB_OUTPUT
+          elif [ -f "frontend/yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+          elif [ -f "frontend/pnpm-lock.yaml" ]; then
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
           else
-            echo "pm=npm" >> $GITHUB_OUTPUT
-            echo "install_cmd=npm ci" >> $GITHUB_OUTPUT
-            echo "build_cmd=npm run build" >> $GITHUB_OUTPUT
+            echo "manager=npm" >> $GITHUB_OUTPUT
           fi
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: ${{ steps.detect-pm.outputs.pm }}
-          cache-dependency-path: |
-            frontend/package-lock.json
-            frontend/yarn.lock
-            frontend/pnpm-lock.yaml
-
       - name: Install dependencies
-        run: ${{ steps.detect-pm.outputs.install_cmd }}
+        run: |
+          if [ "${{ steps.detect-pkg.outputs.manager }}" = "npm" ]; then
+            npm ci
+          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "yarn" ]; then
+            yarn install --frozen-lockfile
+          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "pnpm" ]; then
+            pnpm install --frozen-lockfile
+          fi
 
       - name: Build project
-        run: ${{ steps.detect-pm.outputs.build_cmd }}
+        run: |
+          if [ "${{ steps.detect-pkg.outputs.manager }}" = "npm" ]; then
+            npm run build
+          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "yarn" ]; then
+            yarn build
+          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "pnpm" ]; then
+            pnpm build
+          fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
@@ -55,4 +55,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: frontend/build
           publish_branch: gh-pages
-          force_orphan: true
