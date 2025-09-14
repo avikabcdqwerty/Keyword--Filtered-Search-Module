@@ -1,0 +1,58 @@
+name: Deploy static content to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect package manager
+        id: detect-pm
+        run: |
+          if [ -f "yarn.lock" ]; then
+            echo "pm=yarn" >> $GITHUB_OUTPUT
+            echo "install_cmd=yarn install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "build_cmd=yarn build" >> $GITHUB_OUTPUT
+          elif [ -f "pnpm-lock.yaml" ]; then
+            echo "pm=pnpm" >> $GITHUB_OUTPUT
+            echo "install_cmd=pnpm install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "build_cmd=pnpm build" >> $GITHUB_OUTPUT
+          else
+            echo "pm=npm" >> $GITHUB_OUTPUT
+            echo "install_cmd=npm ci" >> $GITHUB_OUTPUT
+            echo "build_cmd=npm run build" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: ${{ steps.detect-pm.outputs.pm }}
+          cache-dependency-path: |
+            frontend/package-lock.json
+            frontend/yarn.lock
+            frontend/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: ${{ steps.detect-pm.outputs.install_cmd }}
+
+      - name: Build project
+        run: ${{ steps.detect-pm.outputs.build_cmd }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: frontend/build
+          publish_branch: gh-pages
+          force_orphan: true
