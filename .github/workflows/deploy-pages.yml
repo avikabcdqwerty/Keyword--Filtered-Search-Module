@@ -17,40 +17,36 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Detect package manager
-        id: detect-pm
+        id: detect-pkg
         run: |
-          if [ -f "frontend/yarn.lock" ]; then
-            echo "pm=yarn" >> $GITHUB_OUTPUT
+          if [ -f "frontend/package-lock.json" ]; then
+            echo "manager=npm" >> $GITHUB_OUTPUT
+          elif [ -f "frontend/yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
           elif [ -f "frontend/pnpm-lock.yaml" ]; then
-            echo "pm=pnpm" >> $GITHUB_OUTPUT
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
           else
-            echo "pm=npm" >> $GITHUB_OUTPUT
+            echo "manager=npm" >> $GITHUB_OUTPUT
           fi
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
 
       - name: Install dependencies
         run: |
-          if [ "${{ steps.detect-pm.outputs.pm }}" = "yarn" ]; then
-            yarn install --frozen-lockfile
-          elif [ "${{ steps.detect-pm.outputs.pm }}" = "pnpm" ]; then
-            npm install -g pnpm
-            pnpm install --frozen-lockfile
-          else
+          if [ "${{ steps.detect-pkg.outputs.manager }}" = "npm" ]; then
             npm ci
+          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "yarn" ]; then
+            yarn install --frozen-lockfile
+          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "pnpm" ]; then
+            pnpm install --frozen-lockfile
           fi
 
       - name: Build project
         run: |
-          if [ "${{ steps.detect-pm.outputs.pm }}" = "yarn" ]; then
-            yarn build
-          elif [ "${{ steps.detect-pm.outputs.pm }}" = "pnpm" ]; then
-            pnpm build
-          else
+          if [ "${{ steps.detect-pkg.outputs.manager }}" = "npm" ]; then
             npm run build
+          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "yarn" ]; then
+            yarn build
+          elif [ "${{ steps.detect-pkg.outputs.manager }}" = "pnpm" ]; then
+            pnpm build
           fi
 
       - name: Deploy to GitHub Pages
