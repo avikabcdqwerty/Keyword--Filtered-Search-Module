@@ -1,4 +1,4 @@
-name: Deploy static content to GitHub Pages
+name: Deploy Static Content to GitHub Pages
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -19,13 +19,18 @@ jobs:
       - name: Detect package manager
         id: detect-pm
         run: |
-          if [ -f "yarn.lock" ]; then
+          if [ -f "frontend/yarn.lock" ]; then
             echo "pm=yarn" >> $GITHUB_OUTPUT
-          elif [ -f "pnpm-lock.yaml" ]; then
+          elif [ -f "frontend/pnpm-lock.yaml" ]; then
             echo "pm=pnpm" >> $GITHUB_OUTPUT
           else
             echo "pm=npm" >> $GITHUB_OUTPUT
           fi
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Install dependencies
         run: |
